@@ -57,6 +57,7 @@
         this.autoUpdateInput = true;
         this.alwaysShowCalendars = false;
         this.ranges = {};
+        this.showOtherMonth = true;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -262,6 +263,9 @@
 
         if (typeof options.alwaysShowCalendars === 'boolean')
             this.alwaysShowCalendars = options.alwaysShowCalendars;
+
+        if (typeof options.showOtherMonth === 'boolean')
+            this.showOtherMonth = options.showOtherMonth;
 
         // update day names order to firstDay
         if (this.locale.firstDay != 0) {
@@ -752,6 +756,10 @@
             }
 
             for (var row = 0; row < 6; row++) {
+
+                if (!this.showOtherMonth && !calendar[row].map(function (e) { return e.month() }).includes(calendar[1][1].month()))
+                    continue;
+
                 html += '<tr>';
 
                 // add week number
@@ -807,9 +815,15 @@
                             disabled = true;
                     }
                     if (!disabled)
-                        cname += 'available';
+                        if (this.showOtherMonth || calendar[row][col].month() == calendar[1][1].month())
+                            cname += 'available';
 
-                    html += '<td class="' + cname.replace(/^\s+|\s+$/g, '') + '" data-title="' + 'r' + row + 'c' + col + '">' + calendar[row][col].date() + '</td>';
+                    var currentDate = calendar[row][col].date();
+
+                    if (!this.showOtherMonth && calendar[row][col].month() != calendar[1][1].month())
+                      currentDate = '';
+
+                    html += '<td class="' + cname.replace(/^\s+|\s+$/g, '') + '" data-title="' + 'r' + row + 'c' + col + '">' + currentDate + '</td>';
 
                 }
                 html += '</tr>';
