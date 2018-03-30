@@ -58,6 +58,7 @@
         this.alwaysShowCalendars = false;
         this.ranges = {};
         this.showOtherMonth = true;
+        this.sameDates = true;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -266,6 +267,9 @@
 
         if (typeof options.showOtherMonth === 'boolean')
             this.showOtherMonth = options.showOtherMonth;
+
+        if (typeof options.sameDates === 'boolean')
+            this.sameDates = options.sameDates;
 
         // update day names order to firstDay
         if (this.locale.firstDay != 0) {
@@ -1001,8 +1005,19 @@
             this.container.find('input[name=daterangepicker_start]').val(this.startDate.format(this.locale.format));
             if (this.endDate)
                 this.container.find('input[name=daterangepicker_end]').val(this.endDate.format(this.locale.format));
-
-            if (this.singleDatePicker || (this.endDate && (this.startDate.isBefore(this.endDate) || this.startDate.isSame(this.endDate)))) {
+            if (
+              this.singleDatePicker ||
+              (
+                this.endDate &&
+                (
+                  this.startDate.endOf('day').isBefore(this.endDate.endOf('day')) ||
+                  (
+                    this.sameDates &&
+                    this.startDate.endOf('day').isSame(this.endDate.endOf('day'))
+                  )
+                )
+              )
+            ) {
                 this.container.find('button.applyBtn').removeAttr('disabled');
             } else {
                 this.container.find('button.applyBtn').attr('disabled', 'disabled');
