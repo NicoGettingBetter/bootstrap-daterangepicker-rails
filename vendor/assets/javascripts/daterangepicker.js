@@ -60,6 +60,7 @@
         this.showOtherMonth = true;
         this.sameDates = true;
         this.showDefaultDates = true;
+        this.disablePreviousMonth = true;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -271,6 +272,9 @@
 
         if (typeof options.sameDates === 'boolean')
             this.sameDates = options.sameDates;
+
+        if (typeof options.disablePreviousMonth === 'boolean')
+            this.disablePreviousMonth = options.disablePreviousMonth;
 
         if (typeof options.showDefaultDates === 'boolean') {
             this.showDefaultDates = options.showDefaultDates;
@@ -798,12 +802,18 @@
                         classes.push('off');
 
                     //don't allow selection of dates before the minimum date
-                    if (this.minDate && calendar[row][col].isBefore(this.minDate, 'day'))
-                        classes.push('off', 'disabled');
+                    if (this.minDate && calendar[row][col].isBefore(this.minDate, 'day')) {
+                        classes.push('off');
+                        if ((!this.disablePreviousMonth && calendar[row][col].month() == calendar[1][1].month()) || this.disablePreviousMonth)
+                            classes.push('disabled');
+                    }
 
                     //don't allow selection of dates after the maximum date
-                    if (maxDate && calendar[row][col].isAfter(maxDate, 'day'))
-                        classes.push('off', 'disabled');
+                    if (maxDate && calendar[row][col].isAfter(maxDate, 'day')) {
+                      classes.push('off');
+                          if ((!this.disablePreviousMonth && calendar[row][col].month() == calendar[1][1].month()) || this.disablePreviousMonth)
+                              classes.push('disabled');
+                    }
 
                     //don't allow selection of date if a custom function decides it's invalid
                     if (this.isInvalidDate(calendar[row][col]))
