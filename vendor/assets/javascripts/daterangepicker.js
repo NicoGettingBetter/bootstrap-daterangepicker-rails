@@ -59,6 +59,7 @@
         this.ranges = {};
         this.showOtherMonth = true;
         this.sameDates = true;
+        this.showDefaultDates = true;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -271,6 +272,12 @@
         if (typeof options.sameDates === 'boolean')
             this.sameDates = options.sameDates;
 
+        if (typeof options.showDefaultDates === 'boolean') {
+            this.showDefaultDates = options.showDefaultDates;
+        }
+
+        this.showSelectedDates = this.showDefaultDates;
+
         // update day names order to firstDay
         if (this.locale.firstDay != 0) {
             var iterator = this.locale.firstDay;
@@ -480,6 +487,8 @@
                 this.updateElement();
 
             this.updateMonthsInView();
+
+            this.showSelectedDates = true;
         },
 
         setEndDate: function(endDate) {
@@ -801,15 +810,15 @@
                         classes.push('off', 'disabled');
 
                     //highlight the currently selected start date
-                    if (calendar[row][col].format('YYYY-MM-DD') == this.startDate.format('YYYY-MM-DD'))
+                    if (calendar[row][col].format('YYYY-MM-DD') == this.startDate.format('YYYY-MM-DD') && this.showSelectedDates)
                         classes.push('active', 'start-date');
 
                     //highlight the currently selected end date
-                    if (this.endDate != null && calendar[row][col].format('YYYY-MM-DD') == this.endDate.format('YYYY-MM-DD'))
+                    if (this.endDate != null && calendar[row][col].format('YYYY-MM-DD') == this.endDate.format('YYYY-MM-DD') && this.showSelectedDates)
                         classes.push('active', 'end-date');
 
                     //highlight dates in-between the selected dates
-                    if (this.endDate != null && calendar[row][col] > this.startDate && calendar[row][col] < this.endDate)
+                    if (this.endDate != null && calendar[row][col] > this.startDate && calendar[row][col] < this.endDate && this.showSelectedDates)
                         classes.push('in-range');
 
                     var cname = '', disabled = false;
