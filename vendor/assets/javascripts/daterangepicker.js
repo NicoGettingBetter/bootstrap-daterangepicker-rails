@@ -61,6 +61,8 @@
         this.sameDates = true;
         this.showDefaultDates = true;
         this.disablePreviousMonth = true;
+        this.startDateExist = false;
+        this.endDateExist = false;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -492,6 +494,9 @@
 
             this.updateMonthsInView();
 
+            this.startDateExist = true;
+            this.endDateExist = false;
+
             this.showSelectedDates = true;
         },
 
@@ -523,6 +528,8 @@
                 this.updateElement();
 
             this.updateMonthsInView();
+
+            this.endDateExist = true;
         },
 
         isInvalidDate: function() {
@@ -1251,7 +1258,6 @@
         },
 
         hoverDate: function(e) {
-
             //ignore mouse movements while an above-calendar text input has focus
             if (this.container.find('input[name=daterangepicker_start]').is(":focus") || this.container.find('input[name=daterangepicker_end]').is(":focus"))
                 return;
@@ -1296,6 +1302,7 @@
 
                 });
             }
+            this.element.trigger('hoverDate.daterangepicker', [this, date, startDate, this.startDateExist, this.endDateExist]);
 
         },
 
