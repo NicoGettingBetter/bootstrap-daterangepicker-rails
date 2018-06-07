@@ -54,6 +54,12 @@
         this.autoUpdateInput = true;
         this.alwaysShowCalendars = false;
         this.ranges = {};
+        this.showOtherMonth = true;
+        this.sameDates = true;
+        this.showDefaultDates = true;
+        this.disablePreviousMonth = true;
+        this.startDateExist = false;
+        this.endDateExist = false;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -277,6 +283,21 @@
         if (typeof options.alwaysShowCalendars === 'boolean')
             this.alwaysShowCalendars = options.alwaysShowCalendars;
 
+        if (typeof options.showOtherMonth === 'boolean')
+            this.showOtherMonth = options.showOtherMonth;
+
+        if (typeof options.sameDates === 'boolean')
+            this.sameDates = options.sameDates;
+
+        if (typeof options.disablePreviousMonth === 'boolean')
+            this.disablePreviousMonth = options.disablePreviousMonth;
+
+        if (typeof options.showDefaultDates === 'boolean') {
+            this.showDefaultDates = options.showDefaultDates;
+        }
+
+        this.showSelectedDates = this.showDefaultDates;
+
         // update day names order to firstDay
         if (this.locale.firstDay != 0) {
             var iterator = this.locale.firstDay;
@@ -478,6 +499,11 @@
                 this.updateElement();
 
             this.updateMonthsInView();
+
+            this.startDateExist = true;
+            this.endDateExist = false;
+
+            this.showSelectedDates = true;
         },
 
         setEndDate: function(endDate) {
@@ -510,6 +536,8 @@
                 this.updateElement();
 
             this.updateMonthsInView();
+
+            this.endDateExist = true;
         },
 
         isInvalidDate: function() {
@@ -764,6 +792,10 @@
             }
 
             for (var row = 0; row < 6; row++) {
+
+                if (!this.showOtherMonth && !calendar[row].map(function (e) { return e.month() }).includes(calendar[1][1].month()))
+                    continue;
+
                 html += '<tr>';
 
                 // add week number
@@ -789,27 +821,33 @@
                         classes.push('off');
 
                     //don't allow selection of dates before the minimum date
-                    if (this.minDate && calendar[row][col].isBefore(this.minDate, 'day'))
-                        classes.push('off', 'disabled');
+                    if (this.minDate && calendar[row][col].isBefore(this.minDate, 'day')) {
+                        classes.push('off');
+                        if ((!this.disablePreviousMonth && calendar[row][col].month() == calendar[1][1].month()) || this.disablePreviousMonth)
+                            classes.push('disabled');
+                    }
 
                     //don't allow selection of dates after the maximum date
-                    if (maxDate && calendar[row][col].isAfter(maxDate, 'day'))
-                        classes.push('off', 'disabled');
+                    if (maxDate && calendar[row][col].isAfter(maxDate, 'day')) {
+                      classes.push('off');
+                          if ((!this.disablePreviousMonth && calendar[row][col].month() == calendar[1][1].month()) || this.disablePreviousMonth)
+                              classes.push('disabled');
+                    }
 
                     //don't allow selection of date if a custom function decides it's invalid
                     if (this.isInvalidDate(calendar[row][col]))
                         classes.push('off', 'disabled');
 
                     //highlight the currently selected start date
-                    if (calendar[row][col].format('YYYY-MM-DD') == this.startDate.format('YYYY-MM-DD'))
+                    if (calendar[row][col].format('YYYY-MM-DD') == this.startDate.format('YYYY-MM-DD') && this.showSelectedDates)
                         classes.push('active', 'start-date');
 
                     //highlight the currently selected end date
-                    if (this.endDate != null && calendar[row][col].format('YYYY-MM-DD') == this.endDate.format('YYYY-MM-DD'))
+                    if (this.endDate != null && calendar[row][col].format('YYYY-MM-DD') == this.endDate.format('YYYY-MM-DD') && this.showSelectedDates)
                         classes.push('active', 'end-date');
 
                     //highlight dates in-between the selected dates
-                    if (this.endDate != null && calendar[row][col] > this.startDate && calendar[row][col] < this.endDate)
+                    if (this.endDate != null && calendar[row][col] > this.startDate && calendar[row][col] < this.endDate && this.showSelectedDates)
                         classes.push('in-range');
 
                     //apply custom classes for this date
@@ -828,9 +866,15 @@
                             disabled = true;
                     }
                     if (!disabled)
-                        cname += 'available';
+                        if (this.showOtherMonth || calendar[row][col].month() == calendar[1][1].month())
+                            cname += 'available';
 
-                    html += '<td class="' + cname.replace(/^\s+|\s+$/g, '') + '" data-title="' + 'r' + row + 'c' + col + '">' + calendar[row][col].date() + '</td>';
+                    var currentDate = calendar[row][col].date();
+
+                    if (!this.showOtherMonth && calendar[row][col].month() != calendar[1][1].month())
+                      currentDate = '';
+
+                    html += '<td class="' + cname.replace(/^\s+|\s+$/g, '') + '" data-title="' + 'r' + row + 'c' + col + '">' + currentDate + '</td>';
 
                 }
                 html += '</tr>';
@@ -1006,7 +1050,19 @@
 
         updateFormInputs: function() {
 
-            if (this.singleDatePicker || (this.endDate && (this.startDate.isBefore(this.endDate) || this.startDate.isSame(this.endDate)))) {
+            if (
+              this.singleDatePicker ||
+              (
+                this.endDate &&
+                (
+                  this.startDate.endOf('day').isBefore(this.endDate.endOf('day')) ||
+                  (
+                    this.sameDates &&
+                    this.startDate.endOf('day').isSame(this.endDate.endOf('day'))
+                  )
+                )
+              )
+            ) {
                 this.container.find('button.applyBtn').removeAttr('disabled');
             } else {
                 this.container.find('button.applyBtn').attr('disabled', 'disabled');
@@ -1239,6 +1295,7 @@
 
                 });
             }
+            this.element.trigger('hoverDate.daterangepicker', [this, date, startDate, this.startDateExist, this.endDateExist]);
 
         },
 
@@ -1312,6 +1369,7 @@
 
             //This is to cancel the blur event handler if the mouse was in one of the inputs
             e.stopPropagation();
+            this.element.trigger('clickDate.daterangepicker', this);
 
         },
 
