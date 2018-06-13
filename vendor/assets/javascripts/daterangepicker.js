@@ -62,6 +62,7 @@
         this.startDateExist = false;
         this.endDateExist = false;
         this.availableBeforeStartDate = true;
+        this.hideOnOutsideClick = true;
 
         this.opens = 'right';
         if (this.element.hasClass('pull-right'))
@@ -303,6 +304,9 @@
 
         if (typeof options.availableBeforeStartDate === 'boolean')
             this.availableBeforeStartDate = options.availableBeforeStartDate;
+
+        if (typeof options.hideOnOutsideClick === 'boolean')
+            this.hideOnOutsideClick = options.hideOnOutsideClick;
 
         if (typeof options.showDefaultDates === 'boolean')
             this.showDefaultDates = options.showDefaultDates;
@@ -1219,7 +1223,8 @@
                 target.closest(this.container).length ||
                 target.closest('.calendar-table').length
                 ) return;
-            this.hide();
+            if (this.hideOnOutsideClick)
+              this.hide();
             this.element.trigger('outsideClick.daterangepicker', this);
         },
 
